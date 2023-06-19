@@ -112,4 +112,6 @@ cdef class Splitter:
 
     cdef void node_value(self, double* dest) noexcept nogil
 
+    cdef void node_value_with_monotonic_cst(self, double* dest, double lower_bound, double upper_bound) noexcept nogil
+
     cdef double node_impurity(self) noexcept nogil
