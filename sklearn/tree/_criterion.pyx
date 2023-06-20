@@ -248,16 +248,11 @@ cdef class Criterion:
                 (sum_left <= upper_bound * weighted_n_left) &
                 (sum_right <= upper_bound * weighted_n_right)
             )
-            bint check_monotonic_cst
-
-        if monotonic_cst == 0:  # No constraint
-            return 1
-        else:
-            check_monotonic_cst = (
+            bint check_monotonic_cst = (
                 (sum_left * weighted_n_right -
                  sum_right * weighted_n_left) * monotonic_cst <= 0
             )
-            return check_lower_bound & check_upper_bound & check_monotonic_cst
+        return check_lower_bound & check_upper_bound & check_monotonic_cst
 
     cdef void init_sum_missing(self):
         """Init sum_missing to hold sums for missing values."""

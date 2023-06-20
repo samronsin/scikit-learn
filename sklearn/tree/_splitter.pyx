@@ -450,6 +450,7 @@ cdef inline int node_split_best(
                 # Reject if monotonicity constraints are not satisfied
                 if (
                     with_monotonic_cst and
+                    monotonic_cst[current_split.feature] != 0 and
                     not criterion.check_monotonicity(
                         monotonic_cst[current_split.feature],
                         lower_bound,
@@ -805,6 +806,7 @@ cdef inline int node_split_random(
         # Reject if monotonicity constraints are not satisfied
         if (
                 with_monotonic_cst and
+                monotonic_cst[current_split.feature] != 0 and
                 not criterion.check_monotonicity(
                     monotonic_cst[current_split.feature],
                     lower_bound,
