@@ -580,14 +580,17 @@ cdef class ClassificationCriterion(Criterion):
     cdef void clip_node_value(self, double * dest, double lower_bound, double upper_bound) noexcept nogil:
         """Clip the value in dest between lower_bound and upper_bound for monotonic constraints.
 
-        Assumes binary classification and single output, as supported by monotonic constraints.
+        Note that monotonicity constraints are only supported for:
+        - single-output trees and
+        - binary classifications.
         """
         if dest[0] < lower_bound:
             dest[0] = lower_bound
-            dest[1] = 1 - lower_bound
         elif dest[0] > upper_bound:
             dest[0] = upper_bound
-            dest[1] = 1 - upper_bound
+
+        # Class proportions for binary classification must sum to 1.
+        dest[1] = 1 - dest[0]
 
     cdef inline double middle_value(self) noexcept nogil:
         """Compute the middle value of a split for monotonicity constraints as the simple average
