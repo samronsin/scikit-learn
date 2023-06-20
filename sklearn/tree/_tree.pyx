@@ -291,10 +291,9 @@ cdef class DepthFirstTreeBuilder(TreeBuilder):
 
                 # Store value for all nodes, to facilitate tree/model
                 # inspection and interpretation
+                splitter.node_value(tree.value + node_id * tree.value_stride)
                 if splitter.with_monotonic_cst:
-                    splitter.node_value_with_monotonic_cst(tree.value + node_id * tree.value_stride, lower_bound, upper_bound)
-                else:
-                    splitter.node_value(tree.value + node_id * tree.value_stride)
+                    splitter.clip_node_value(tree.value + node_id * tree.value_stride, lower_bound, upper_bound)
 
                 if not is_leaf:
                     if (
@@ -643,10 +642,9 @@ cdef class BestFirstTreeBuilder(TreeBuilder):
             return -1
 
         # compute values also for split nodes (might become leafs later).
+        splitter.node_value(tree.value + node_id * tree.value_stride)
         if splitter.with_monotonic_cst:
-            splitter.node_value_with_monotonic_cst(tree.value + node_id * tree.value_stride, lower_bound, upper_bound)
-        else:
-            splitter.node_value(tree.value + node_id * tree.value_stride)
+            splitter.clip_node_value(tree.value + node_id * tree.value_stride, lower_bound, upper_bound)
 
         res.node_id = node_id
         res.start = start
