@@ -247,13 +247,10 @@ cdef class Splitter:
 
         self.criterion.node_value(dest)
 
-    cdef inline void clip_node_value(self, double * dest, double lower_bound, double upper_bound) noexcept nogil:
-        """Copy the value of node samples[start:end] into dest."""
+    cdef inline void clip_node_value(self, double* dest, double lower_bound, double upper_bound) noexcept nogil:
+        """Clip the value in dest between lower_bound and upper_bound for monotonic constraints."""
 
-        if dest[0] < lower_bound:
-            dest[0] = lower_bound
-        elif dest[0] > upper_bound:
-            dest[0] = upper_bound
+        self.criterion.clip_node_value(dest, lower_bound, upper_bound)
 
     cdef double node_impurity(self) noexcept nogil:
         """Return the impurity of the current node."""

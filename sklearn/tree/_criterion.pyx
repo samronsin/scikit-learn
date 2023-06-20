@@ -157,6 +157,9 @@ cdef class Criterion:
         """
         pass
 
+    cdef void clip_node_value(self, double* dest, double lower_bound, double upper_bound) noexcept nogil:
+        pass
+
     cdef double middle_value(self) noexcept nogil:
         """Compute the middle value of a split for monotonicity constraints
 
@@ -578,6 +581,18 @@ cdef class ClassificationCriterion(Criterion):
         for k in range(self.n_outputs):
             memcpy(dest, &self.sum_total[k, 0], self.n_classes[k] * sizeof(double))
             dest += self.max_n_classes
+
+    cdef void clip_node_value(self, double * dest, double lower_bound, double upper_bound) noexcept nogil:
+        """Clip the value in dest between lower_bound and upper_bound for monotonic constraints.
+
+        Assumes binary classification and single output, as supported by monotonic constraints.
+        """
+        if dest[0] < lower_bound:
+            dest[0] = lower_bound
+            dest[1] = 1 - lower_bound
+        elif dest[0] > upper_bound:
+            dest[0] = upper_bound
+            dest[1] = 1 - upper_bound
 
     cdef inline double middle_value(self) noexcept nogil:
         """Compute the middle value of a split for monotonicity constraints as the simple average
@@ -1029,6 +1044,13 @@ cdef class RegressionCriterion(Criterion):
 
         for k in range(self.n_outputs):
             dest[k] = self.sum_total[k] / self.weighted_n_node_samples
+
+    cdef inline void clip_node_value(self, double* dest, double lower_bound, double upper_bound) noexcept nogil:
+        """Clip the value in dest between lower_bound and upper_bound for monotonic constraints."""
+        if dest[0] < lower_bound:
+            dest[0] = lower_bound
+        elif dest[0] > upper_bound:
+            dest[0] = upper_bound
 
     cdef inline double middle_value(self) noexcept nogil:
         """Compute the middle value of a split for monotonicity constraints as the simple average
