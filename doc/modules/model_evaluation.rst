@@ -218,6 +218,7 @@ Scoring string name                    Function                                 
 'top_k_accuracy'                       :func:`metrics.top_k_accuracy_score`
 'average_precision'                    :func:`metrics.average_precision_score`
 'neg_brier_score'                      :func:`metrics.brier_score_loss`                   requires ``predict_proba`` support
+'neg_l1_calibration_error'             :func:`metrics.calibration_error`                  requires ``predict_proba`` support, binary only
 'neg_l2_calibration_error'             :func:`metrics.calibration_error`                  requires ``predict_proba`` support, binary only
 'f1'                                   :func:`metrics.f1_score`                           for binary targets
 'f1_micro'                             :func:`metrics.f1_score`                           micro-averaged
@@ -2023,6 +2024,14 @@ binary probabilistic predictions. This metric measures calibration alone by
 comparing, within each bin, the average predicted probability assigned to the
 positive class and the observed fraction of positive samples.
 
+The L1 calibration error, also known as the expected calibration error (ECE),
+is computed as:
+
+.. math::
+
+  \mathrm{CE}_{L_1}(y, \hat{p}) =
+  \frac{\sum_k w_k \left|\bar{y}_k - \bar{p}_k\right|}{\sum_k w_k}
+
 The L2 calibration error is computed as:
 
 .. math::
@@ -2036,7 +2045,8 @@ in bin :math:`k`, :math:`\bar{y}_k` is the weighted fraction of positive samples
 in the bin, and :math:`\bar{p}_k` is the weighted average predicted probability
 of the positive class in the bin. With ``squared=True``, the metric returns
 :math:`\mathrm{CE}_{L_2}^2`, the quantity inside the outer parentheses and the
-binned calibration term of the Brier loss decomposition.
+binned calibration term of the Brier loss decomposition. The ``squared=True``
+option is only supported for the L2 calibration error.
 
 The bins are defined by weighted quantiles of the predicted probabilities,
 so each bin has approximately equal total sample weight. This corresponds to

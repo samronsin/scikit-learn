@@ -1,5 +1,5 @@
-- Add :func:`metrics.calibration_error` to compute the L2 calibration error for
-  binary probabilistic predictions, along with the corresponding
-  `"neg_l2_calibration_error"` scorer. The function supports array API compatible
-  inputs.
+- Add :func:`metrics.calibration_error` to compute the L1 or L2 calibration
+  error for binary probabilistic predictions, along with the corresponding
+  `"neg_l1_calibration_error"` and `"neg_l2_calibration_error"` scorers. The
+  function supports array API compatible inputs.
   By :user:`Samuel Ronsin <samronsin>`.
