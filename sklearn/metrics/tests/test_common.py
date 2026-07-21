@@ -2616,6 +2616,9 @@ array_api_metric_checkers = {
     ],
     # Continuous classification metrics
     calibration_error: [check_array_api_binary_continuous_classification_metric],
+    partial(calibration_error, norm="l1"): [
+        check_array_api_binary_continuous_classification_metric
+    ],
     brier_score_loss: [
         check_array_api_binary_continuous_classification_metric,
         check_array_api_multiclass_continuous_classification_metric,

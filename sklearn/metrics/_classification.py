@@ -4036,7 +4036,7 @@ def brier_score_loss(
     {
         "y_true": ["array-like"],
         "y_proba": ["array-like"],
-        "norm": [StrOptions({"l2"})],
+        "norm": [StrOptions({"l1", "l2"})],
         "squared": ["boolean"],
         "sample_weight": ["array-like", None],
         "pos_label": [Real, str, "boolean", None],
@@ -4073,14 +4073,16 @@ def calibration_error(
     y_proba : array-like of shape (n_samples,)
         Probabilities of the positive class.
 
-    norm : {"l2"}, default="l2"
-        Norm used to aggregate the calibration errors over the bins. Currently,
-        only ``"l2"`` is supported.
+    norm : {"l1", "l2"}, default="l2"
+        Norm used to aggregate the calibration errors over the bins. ``"l1"``
+        computes the expected calibration error (ECE), while ``"l2"`` computes
+        the root mean squared calibration error.
 
     squared : bool, default=False
         If ``True``, return the squared L2 calibration error, which is the
         binned calibration term of the Brier score decomposition. If ``False``,
-        return the L2 calibration error.
+        return the calibration error specified by `norm`. ``True`` is only
+        supported when ``norm="l2"``.
 
     sample_weight : array-like of shape (n_samples,), default=None
         Sample weights.
@@ -4118,6 +4120,9 @@ def calibration_error(
     >>> calibration_error(y_true, y_proba)
     0.25
     """
+    if norm == "l1" and squared:
+        raise ValueError("squared=True is only supported for norm='l2'.")
+
     y_proba = check_array(
         y_proba, ensure_2d=False, ensure_all_finite=False, input_name="y_proba"
     )
@@ -4148,8 +4153,11 @@ def calibration_error(
     )
 
     xp, _ = get_namespace(bin_weights)
-    error = xp.sum(bin_weights * (prob_true - prob_pred) ** 2) / xp.sum(bin_weights)
-    if not squared:
+    bin_errors = xp.abs(prob_true - prob_pred)
+    if norm == "l2":
+        bin_errors = bin_errors**2
+    error = xp.sum(bin_weights * bin_errors) / xp.sum(bin_weights)
+    if norm == "l2" and not squared:
         error = xp.sqrt(error)
     return float(error)
 
