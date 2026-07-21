@@ -3218,12 +3218,12 @@ def test_calibration_error_calibrated_predictions():
     assert calibration_error(y_true, y_proba) == pytest.approx(0.0)
 
 
-def _reference_calibration_error(y_true, y_proba, n_bins, *, squared=False):
+def _reference_calibration_error(y_true, y_proba, n_bins, *, norm="l2", squared=False):
     """Independent NumPy reference for the unweighted calibration error.
 
     Quantile (equal-mass) bins are built with linear-interpolation percentiles,
-    then the squared calibration gaps are averaged weighting each bin by its
-    number of samples.
+    then the calibration gaps are aggregated weighting each bin by its number
+    of samples.
     """
     edges = np.percentile(y_proba, np.linspace(0, 100, n_bins + 1))
     bin_ids = np.searchsorted(edges[1:-1], y_proba)
@@ -3231,17 +3231,22 @@ def _reference_calibration_error(y_true, y_proba, n_bins, *, squared=False):
     for b in np.unique(bin_ids):
         mask = bin_ids == b
         weight = np.count_nonzero(mask)
-        error += weight * (y_true[mask].mean() - y_proba[mask].mean()) ** 2
+        bin_error = abs(y_true[mask].mean() - y_proba[mask].mean())
+        if norm == "l2":
+            bin_error = bin_error**2
+        error += weight * bin_error
         total += weight
     error = error / total
-    return error if squared else np.sqrt(error)
+    if norm == "l2" and not squared:
+        error = np.sqrt(error)
+    return error
 
 
 # `n_samples` includes values not divisible by the resulting bin count, where a
 # (wrong) unweighted average over bins would disagree with the mass-weighted one.
 @pytest.mark.parametrize("n_samples", [12, 40, 53, 128])
-@pytest.mark.parametrize("squared", [False, True])
-def test_calibration_error_matches_reference(n_samples, squared):
+@pytest.mark.parametrize("norm, squared", [("l1", False), ("l2", False), ("l2", True)])
+def test_calibration_error_matches_reference(n_samples, norm, squared):
     # Cross-check the full pipeline (binning + mass-weighted aggregation) against
     # an independent reference.
     rng = check_random_state(n_samples)
@@ -3249,10 +3254,19 @@ def test_calibration_error_matches_reference(n_samples, squared):
     y_true = rng.binomial(1, y_proba)
     n_bins = int(np.ceil(np.cbrt(n_samples)))
 
-    expected = _reference_calibration_error(y_true, y_proba, n_bins, squared=squared)
-    assert calibration_error(y_true, y_proba, squared=squared) == pytest.approx(
-        expected
+    expected = _reference_calibration_error(
+        y_true, y_proba, n_bins, norm=norm, squared=squared
     )
+    assert calibration_error(
+        y_true, y_proba, norm=norm, squared=squared
+    ) == pytest.approx(expected)
+
+
+def test_calibration_error_l1_squared_raises():
+    with pytest.raises(
+        ValueError, match="squared=True is only supported for norm='l2'"
+    ):
+        calibration_error([0, 1], [0.25, 0.75], norm="l1", squared=True)
 
 
 def test_calibration_error_default_pos_label_single_class():
